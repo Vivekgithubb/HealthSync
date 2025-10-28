@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_URL1 = "http://localhost:5000/api"; // for localhost
-const API_URL = import.meta.env.VITE_BACKEND_URL;
+const API_URL1 = "http://localhost:5000/api"; // local fallback
+const API_URL = import.meta.env.VITE_BACKEND_URL || API_URL1;
 //hotspot
 
 // Create axios instance
@@ -87,8 +87,8 @@ export const appointmentsAPI = {
 
 // Pharmacy
 export const pharmacyAPI = {
-  parsePrescription: (formData) => {
-    return api.post("/pharmacy/parse-prescription", formData, {
+  analyzePrescription: (formData) => {
+    return api.post("/pharmacy/analyze", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
