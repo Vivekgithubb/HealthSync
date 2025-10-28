@@ -4,17 +4,17 @@ const doctorSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Please provide doctor name"],
+
       trim: true,
     },
     specialty: {
       type: String,
-      required: [true, "Please provide specialty"],
+
       trim: true,
     },
     clinic: {
       type: String,
-      required: [true, "Please provide clinic name"],
+
       trim: true,
     },
     address: {
@@ -25,7 +25,6 @@ const doctorSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: [true, "Please provide phone number"],
     },
     email: {
       type: String,

@@ -10,7 +10,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-  console.log(import.meta.env.VITE_BACKEND_URL);
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Logging");
