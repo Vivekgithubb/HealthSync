@@ -61,16 +61,37 @@ export const register = async (req, res) => {
   }
 };
 
+import axios from "axios";
+
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, recaptchaToken } = req.body;
 
-    // Find user and include password
-    if (!email || !password) {
+    if (!process.env.RECAPTCHA_SECRET) {
+      return res.status(500).json({ message: "reCAPTCHA not configured" });
+    }
+
+    // Validate input
+    if (!email || !password || !recaptchaToken) {
       return res
         .status(400)
         .json({ message: "Something is missing, check again" });
     }
+
+    // Verify reCAPTCHA with Google
+    const params = new URLSearchParams();
+    params.append("secret", process.env.RECAPTCHA_SECRET);
+    params.append("response", recaptchaToken);
+    if (req.ip) params.append("remoteip", req.ip);
+
+    const verifyUrl = "https://www.google.com/recaptcha/api/siteverify";
+    const googleRes = await axios.post(verifyUrl, params);
+    const isHuman = googleRes?.data?.success === true;
+    if (!isHuman) {
+      return res.status(400).json({ message: "reCAPTCHA verification failed" });
+    }
+
+    // Find user and include password
     const user = await User.findOne({ email }).select("+password");
     console.log(user);
     if (user && (await user.comparePassword(password))) {

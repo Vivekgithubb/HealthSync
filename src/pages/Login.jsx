@@ -2,21 +2,24 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/UseAuth";
 import { Activity } from "lucide-react";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState(null);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Logging");
     setError("");
     setLoading(true);
     try {
-      const result = await login(email, password);
+      const result = await login(email, password, captchaToken);
       console.log("Logging done");
       if (result.success) {
         navigate("/");
@@ -81,9 +84,20 @@ export default function Login() {
               />
             </div>
 
+            {siteKey ? (
+              <div className="flex justify-center">
+                <ReCAPTCHA sitekey={siteKey} onChange={setCaptchaToken} />
+              </div>
+            ) : (
+              <div className="p-3 bg-yellow-50 border border-yellow-300 rounded text-yellow-800 text-sm">
+                reCAPTCHA not configured. Set VITE_RECAPTCHA_SITE_KEY in your
+                .env and restart the dev server.
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !siteKey || !captchaToken}
               className="w-full bg-amber-500 text-white py-3 rounded-md font-semibold hover:bg-amber-500/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Logging in..." : "Login"}

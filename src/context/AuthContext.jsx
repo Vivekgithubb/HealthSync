@@ -17,9 +17,9 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, recaptchaToken) => {
     try {
-      const response = await authAPI.login({ email, password });
+      const response = await authAPI.login({ email, password, recaptchaToken });
       const { token, ...userData } = response.data;
 
       localStorage.setItem("token", token);
