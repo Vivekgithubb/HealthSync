@@ -3,6 +3,7 @@
 ## ✅ COMPLETED - Backend (100%)
 
 ### Database Models
+
 - ✅ User model with bcrypt password hashing
 - ✅ Doctor model with clinic information
 - ✅ Document model for Cloudinary file references
@@ -10,6 +11,7 @@
 - ✅ Appointment model with reminder tracking
 
 ### API Routes & Controllers
+
 - ✅ Authentication (register, login, profile)
 - ✅ Doctors CRUD operations
 - ✅ Documents upload/download with Cloudinary
@@ -18,6 +20,7 @@
 - ✅ Pharmacy (Gemini AI + OpenFDA integration)
 
 ### Core Features
+
 - ✅ JWT authentication with middleware
 - ✅ Cloudinary file upload configuration
 - ✅ Gemini AI prescription image parsing
@@ -27,6 +30,7 @@
 - ✅ CORS configuration for frontend
 
 ### Configuration Files
+
 - ✅ server.js with Express setup
 - ✅ database.js for MongoDB connection
 - ✅ .env.example template
@@ -34,11 +38,12 @@
 
 ## 🚧 TODO - Frontend
 
-###  1. Update Tailwind Config with Style Guide Colors
+### 1. Update Tailwind Config with Style Guide Colors
 
 File: `tailwind.config.js`
 
 Add custom colors from style guide:
+
 ```javascript
 colors: {
   primary: {
@@ -64,6 +69,7 @@ colors: {
 File: `src/services/api.js`
 
 Create axios instance and API methods for all endpoints:
+
 - auth (register, login, getProfile, updateProfile)
 - doctors (getAll, getOne, create, update, delete)
 - documents (getAll, upload, update, delete)
@@ -84,6 +90,7 @@ File: `src/context/AuthContext.jsx`
 File: `src/components/Layout.jsx`
 
 Replace with sidebar layout matching style guide:
+
 - Deep navy (#0D1B2A) sidebar
 - lucide-react icons
 - Fixed 240px width sidebar
@@ -92,11 +99,13 @@ Replace with sidebar layout matching style guide:
 ### 5. Create New Pages
 
 **a. Login/Register Pages**
+
 - Files: `src/pages/Login.jsx`, `src/pages/Register.jsx`
 - Simple forms with style guide design
 - Store token on successful login
 
 **b. Dashboard Page**
+
 - File: `src/pages/Dashboard.jsx`
 - Show upcoming appointments
 - Show recent visits
@@ -104,6 +113,7 @@ Replace with sidebar layout matching style guide:
 - Quick action cards
 
 **c. Documents Page**
+
 - File: `src/pages/Documents.jsx`
 - List all uploaded documents
 - Upload new documents
@@ -111,12 +121,14 @@ Replace with sidebar layout matching style guide:
 - View/download documents
 
 **d. Doctors Page**
+
 - File: `src/pages/Doctors.jsx`
 - List all doctors
 - Add/edit/delete doctors
 - Display in cards with clinic info
 
 **e. Visit History Page**
+
 - File: `src/pages/VisitHistory.jsx`
 - List all past visits
 - Create new visit entry
@@ -125,6 +137,7 @@ Replace with sidebar layout matching style guide:
 - Show populated doctor and document info
 
 **f. Appointments Page**
+
 - File: `src/pages/Appointments.jsx`
 - List all appointments
 - Create new appointment
@@ -133,6 +146,7 @@ Replace with sidebar layout matching style guide:
 - Filter by status
 
 **g. AI Pharmacy Page**
+
 - File: `src/pages/AIPharmacy.jsx`
 - Upload prescription image section
 - Display parsed medications from Gemini
@@ -158,6 +172,7 @@ Replace with sidebar layout matching style guide:
 File: `src/App.jsx`
 
 Add routes:
+
 ```javascript
 /login
 /register
@@ -174,6 +189,7 @@ Add routes:
 File: `src/index.css`
 
 Add style guide specific styles:
+
 - Custom scrollbar
 - Focus states
 - Hover transitions
@@ -182,6 +198,7 @@ Add style guide specific styles:
 ## 📋 Implementation Priority
 
 ### Phase 1 (Critical Path)
+
 1. ✅ Tailwind colors
 2. ✅ API service layer
 3. ✅ Auth context
@@ -189,16 +206,19 @@ Add style guide specific styles:
 5. ✅ Updated Layout with sidebar
 
 ### Phase 2 (Core Features)
+
 6. ✅ Dashboard page
 7. ✅ Doctors page
 8. ✅ Documents page
 
 ### Phase 3 (Advanced Features)
+
 9. ✅ Visit History page (with doctor dropdown)
 10. ✅ Appointments page (with doctor dropdown)
 11. ✅ AI Pharmacy page
 
 ### Phase 4 (Polish)
+
 12. ✅ Reusable components
 13. ✅ Error handling
 14. ✅ Loading states
@@ -207,7 +227,9 @@ Add style guide specific styles:
 ## 🔧 Environment Setup
 
 ### Backend `.env` file
+
 Create `backend/.env` with:
+
 ```
 PORT=5000
 MONGODB_URI=your_mongodb_connection
@@ -225,12 +247,14 @@ FRONTEND_URL=http://localhost:5173
 ### Running the Application
 
 **Terminal 1 - Backend:**
+
 ```bash
 cd backend
 npm run dev
 ```
 
 **Terminal 2 - Frontend:**
+
 ```bash
 npm run dev
 ```
