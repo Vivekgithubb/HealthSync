@@ -22,6 +22,9 @@ export default function Appointments() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editAppointment, setEditAppointment] = useState(null);
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   const [form, setForm] = useState({
     appointmentDate: "",
@@ -75,24 +78,24 @@ export default function Appointments() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
   // const handleDownload = (url, title) => {
-  //   const link = document.createElement("a");
-  //   link.href = url.replace("/upload/", "/upload/fl_attachment/");
-  //   link.download = title;
-  //   link.click();
+  // //   const link = document.createElement("a");
+  // //   link.href = url.replace("/upload/", "/upload/fl_attachment/");
+  // //   link.download = title;
+  // //   link.click();
+  // // };
+  // const handleDownloadDocument = async (docId, title) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `${import.meta.env.VITE_BACKEDN_URL}/api/documents/download/${docId}`
+  //     );
+  //     const link = document.createElement("a");
+  //     link.href = response.data.url;
+  //     link.download = title;
+  //     link.click();
+  //   } catch (error) {
+  //     setError("Failed to download document");
+  //   }
   // };
-  const handleDownloadDocument = async (docId, title) => {
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_BACKEDN_URL}/api/documents/download/${docId}`
-      );
-      const link = document.createElement("a");
-      link.href = response.data.url;
-      link.download = title;
-      link.click();
-    } catch (error) {
-      setError("Failed to download document");
-    }
-  };
 
   const toggleDoc = (id) => {
     setForm((prev) => ({
@@ -140,6 +143,52 @@ export default function Appointments() {
     }
   };
 
+  const handleEditClick = (appointment) => {
+    // Prefill edit form with existing appointment data
+    setEditAppointment({
+      ...appointment,
+      appointmentDate: appointment.appointmentDate
+        ? new Date(appointment.appointmentDate).toISOString().slice(0, 10)
+        : "",
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditAppointment((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const submitEdit = async (e) => {
+    e.preventDefault();
+    if (!editAppointment) return;
+    setEditSubmitting(true);
+    setError("");
+    try {
+      // Build payload - only send editable fields
+      const payload = {
+        appointmentDate: editAppointment.appointmentDate,
+        appointmentTime: editAppointment.appointmentTime,
+        status: editAppointment.status,
+        notes: editAppointment.notes,
+      };
+
+      await appointmentsAPI.update(editAppointment._id, payload);
+
+      // Refresh appointments list
+      const apts = await appointmentsAPI.getAll();
+      setAppointments(apts.data);
+      setShowEditModal(false);
+      setEditAppointment(null);
+      setSuccess("Appointment updated");
+      setTimeout(() => setSuccess(""), 2500);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to update appointment");
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "scheduled":
@@ -183,6 +232,109 @@ export default function Appointments() {
         <div className="p-4 bg-green-100 border border-green-300 rounded-md text-green-700 flex items-center space-x-2">
           <Bell className="w-5 h-5" />
           <span>{success}</span>
+        </div>
+      )}
+
+      {showEditModal && editAppointment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-blue-900">
+                  Edit Appointment
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditAppointment(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <form onSubmit={submitEdit} className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-blue-900 mb-2">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      name="appointmentDate"
+                      value={editAppointment.appointmentDate || ""}
+                      onChange={handleEditChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-900 mb-2">
+                      Time
+                    </label>
+                    <input
+                      type="time"
+                      name="appointmentTime"
+                      value={editAppointment.appointmentTime || ""}
+                      onChange={handleEditChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-blue-900 mb-2">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    value={editAppointment.status || "scheduled"}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="scheduled">Scheduled</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="rescheduled">Rescheduled</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-blue-900 mb-2">
+                    Notes
+                  </label>
+                  <textarea
+                    name="notes"
+                    value={editAppointment.notes || ""}
+                    onChange={handleEditChange}
+                    rows="3"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-amber-500"
+                    placeholder="Notes about the appointment"
+                  />
+                </div>
+
+                <div className="flex space-x-3 pt-2">
+                  <button
+                    type="submit"
+                    disabled={editSubmitting}
+                    className="flex-1 bg-amber-500 text-white py-3 rounded-md font-semibold hover:bg-amber-600 disabled:opacity-50"
+                  >
+                    {editSubmitting ? "Saving..." : "Save Changes"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditAppointment(null);
+                    }}
+                    className="px-6 py-3 border border-gray-300 rounded-md font-semibold text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
       {error && (
@@ -534,13 +686,21 @@ export default function Appointments() {
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => handleDelete(a._id)}
-                className="w-full mt-3 py-2 border border-red-500 text-red-600 rounded-md hover:bg-red-50 transition-colors flex items-center justify-center space-x-2"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Cancel Appointment</span>
-              </button>
+              <div className="flex space-x-3 mt-3">
+                <button
+                  onClick={() => handleEditClick(a)}
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(a._id)}
+                  className="flex-1 py-2 border border-red-500 text-red-600 rounded-md hover:bg-red-50 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Cancel</span>
+                </button>
+              </div>
             </div>
           ))}
         </div>
