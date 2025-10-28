@@ -662,7 +662,7 @@ export default function Appointments() {
                               {(doc.fileSize / 1024).toFixed(1)} KB
                             </p>
                           </div>
-                          <div className="flex space-x-3">
+                          <div className="flex space-x-3 justify-center items-center">
                             <a
                               href={doc.fileUrl}
                               target="_blank"
@@ -672,15 +672,6 @@ export default function Appointments() {
                               View
                             </a>
 
-                            <a
-                              href={doc.downloadUrl || doc.fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              download
-                              className="text-green-600 text-sm hover:underline"
-                            >
-                              Download
-                            </a>
                             <button
                               onClick={() =>
                                 downloadBlob(

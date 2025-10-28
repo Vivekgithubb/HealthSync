@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { documentsAPI } from '../services/api';
-import { FileText, Upload, X, Download, Trash2, Edit, Eye } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { documentsAPI } from "../services/api";
+import { FileText, Upload, X, Download, Trash2, Edit, Eye } from "lucide-react";
 
 export default function Documents() {
   const [documents, setDocuments] = useState([]);
@@ -9,13 +9,13 @@ export default function Documents() {
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [formData, setFormData] = useState({
-    title: '',
-    type: 'prescription',
-    description: '',
-    tags: ''
+    title: "",
+    type: "prescription",
+    description: "",
+    tags: "",
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     loadDocuments();
@@ -26,7 +26,8 @@ export default function Documents() {
       const response = await documentsAPI.getAll();
       setDocuments(response.data);
     } catch (error) {
-      setError('Failed to load documents');
+      console.log(error);
+      setError("Failed to load documents");
     } finally {
       setLoading(false);
     }
@@ -37,7 +38,7 @@ export default function Documents() {
     if (file) {
       // Validate file size (10MB max)
       if (file.size > 10 * 1024 * 1024) {
-        setError('File size must be less than 10MB');
+        setError("File size must be less than 10MB");
         return;
       }
       setSelectedFile(file);
@@ -54,86 +55,93 @@ export default function Documents() {
 
   const resetForm = () => {
     setFormData({
-      title: '',
-      type: 'prescription',
-      description: '',
-      tags: ''
+      title: "",
+      type: "prescription",
+      description: "",
+      tags: "",
     });
     setSelectedFile(null);
     setShowUpload(false);
-    setError('');
+    setError("");
   };
 
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!selectedFile) {
-      setError('Please select a file to upload');
+      setError("Please select a file to upload");
       return;
     }
 
     setUploading(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
       const uploadFormData = new FormData();
-      uploadFormData.append('file', selectedFile);
-      uploadFormData.append('title', formData.title);
-      uploadFormData.append('type', formData.type);
-      uploadFormData.append('description', formData.description);
-      
+      uploadFormData.append("file", selectedFile);
+      uploadFormData.append("title", formData.title);
+      uploadFormData.append("type", formData.type);
+      uploadFormData.append("description", formData.description);
+
       if (formData.tags) {
-        const tagsArray = formData.tags.split(',').map(tag => tag.trim());
-        uploadFormData.append('tags', JSON.stringify(tagsArray));
+        const tagsArray = formData.tags.split(",").map((tag) => tag.trim());
+        uploadFormData.append("tags", JSON.stringify(tagsArray));
       }
 
       await documentsAPI.upload(uploadFormData);
-      setSuccess('Document uploaded successfully!');
+      setSuccess("Document uploaded successfully!");
       await loadDocuments();
       resetForm();
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
-      setError(error.response?.data?.message || 'Upload failed');
+      setError(error.response?.data?.message || "Upload failed");
     } finally {
       setUploading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this document?')) return;
+    if (!window.confirm("Are you sure you want to delete this document?"))
+      return;
 
     try {
       await documentsAPI.delete(id);
-      setSuccess('Document deleted successfully!');
+      setSuccess("Document deleted successfully!");
       await loadDocuments();
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
-      setError('Failed to delete document');
+      console.log(error);
+      setError("Failed to delete document");
     }
   };
 
   const getDocumentIcon = (type) => {
     const iconClass = "w-6 h-6";
     switch (type) {
-      case 'prescription': return <FileText className={`${iconClass} text-blue-500`} />;
-      case 'lab_report': return <FileText className={`${iconClass} text-green-500`} />;
-      case 'xray': return <FileText className={`${iconClass} text-purple-500`} />;
-      case 'scan': return <FileText className={`${iconClass} text-orange-500`} />;
-      default: return <FileText className={`${iconClass} text-gray-500`} />;
+      case "prescription":
+        return <FileText className={`${iconClass} text-blue-500`} />;
+      case "lab_report":
+        return <FileText className={`${iconClass} text-green-500`} />;
+      case "xray":
+        return <FileText className={`${iconClass} text-purple-500`} />;
+      case "scan":
+        return <FileText className={`${iconClass} text-orange-500`} />;
+      default:
+        return <FileText className={`${iconClass} text-gray-500`} />;
     }
   };
 
   const formatFileSize = (bytes) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   };
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -148,10 +156,12 @@ export default function Documents() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-end items-center">
         <div>
           <h1 className="text-4xl font-bold text-blue-900">Documents</h1>
-          <p className="text-gray-500 mt-2">Upload and manage your medical documents</p>
+          <p className="text-gray-500 mt-2">
+            Upload and manage your medical documents
+          </p>
         </div>
         <button
           onClick={() => setShowUpload(true)}
@@ -180,8 +190,13 @@ export default function Documents() {
           <div className="bg-white rounded-lg shadow-xl max-w-lg w-full">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-blue-900">Upload Document</h2>
-                <button onClick={resetForm} className="text-gray-400 hover:text-gray-600">
+                <h2 className="text-2xl font-semibold text-blue-900">
+                  Upload Document
+                </h2>
+                <button
+                  onClick={resetForm}
+                  className="text-gray-400 hover:text-gray-600"
+                >
                   <X className="w-6 h-6" />
                 </button>
               </div>
@@ -205,13 +220,21 @@ export default function Documents() {
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                       {selectedFile ? (
                         <div>
-                          <p className="text-blue-900 font-medium">{selectedFile.name}</p>
-                          <p className="text-sm text-gray-500">{formatFileSize(selectedFile.size)}</p>
+                          <p className="text-blue-900 font-medium">
+                            {selectedFile.name}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {formatFileSize(selectedFile.size)}
+                          </p>
                         </div>
                       ) : (
                         <div>
-                          <p className="text-gray-600 font-medium">Click to upload</p>
-                          <p className="text-sm text-gray-500 mt-1">PDF, Images, or Documents (Max 10MB)</p>
+                          <p className="text-gray-600 font-medium">
+                            Click to upload
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            PDF, Images, or Documents (Max 10MB)
+                          </p>
                         </div>
                       )}
                     </label>
@@ -292,7 +315,7 @@ export default function Documents() {
                     disabled={uploading}
                     className="flex-1 bg-amber-500 text-white py-3 rounded-md font-semibold hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {uploading ? 'Uploading...' : 'Upload Document'}
+                    {uploading ? "Uploading..." : "Upload Document"}
                   </button>
                   <button
                     type="button"
@@ -312,8 +335,12 @@ export default function Documents() {
       {documents.length === 0 ? (
         <div className="bg-white rounded-lg shadow-md p-12 text-center border border-gray-200">
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-blue-900 mb-2">No documents yet</h3>
-          <p className="text-gray-500 mb-6">Upload your first medical document to get started</p>
+          <h3 className="text-xl font-semibold text-blue-900 mb-2">
+            No documents yet
+          </h3>
+          <p className="text-gray-500 mb-6">
+            Upload your first medical document to get started
+          </p>
           <button
             onClick={() => setShowUpload(true)}
             className="bg-amber-500 text-white px-6 py-2 rounded-md font-semibold hover:bg-amber-600 transition-colors"
@@ -334,14 +361,20 @@ export default function Documents() {
                     {getDocumentIcon(doc.type)}
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-blue-900 line-clamp-2">{doc.title}</h3>
-                    <p className="text-sm text-gray-500 capitalize">{doc.type.replace('_', ' ')}</p>
+                    <h3 className="text-lg font-semibold text-blue-900 line-clamp-2">
+                      {doc.title}
+                    </h3>
+                    <p className="text-sm text-gray-500 capitalize">
+                      {doc.type.replace("_", " ")}
+                    </p>
                   </div>
                 </div>
               </div>
 
               {doc.description && (
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{doc.description}</p>
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  {doc.description}
+                </p>
               )}
 
               <div className="flex items-center justify-between text-xs text-gray-500 mb-4">

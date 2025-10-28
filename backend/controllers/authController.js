@@ -1,9 +1,9 @@
 // const jwt = require("jsonwebtoken");
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import { protect } from "../middleware/auth.js";
-
+import axios from "axios";
 // Generate JWT Token
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
@@ -60,8 +60,6 @@ export const register = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
-import axios from "axios";
 
 export const login = async (req, res) => {
   try {

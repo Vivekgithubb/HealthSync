@@ -472,15 +472,7 @@ export default function Visits() {
                               >
                                 View
                               </a>
-                              <a
-                                href={doc.downloadUrl || doc.fileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                download
-                                className="text-green-600 text-sm hover:underline"
-                              >
-                                Download
-                              </a>
+
                               <button
                                 onClick={() =>
                                   downloadBlob(
@@ -490,7 +482,7 @@ export default function Visits() {
                                 }
                                 className="text-sm text-gray-600 hover:underline"
                               >
-                                DL
+                                Download
                               </button>
                             </div>
                           </div>
