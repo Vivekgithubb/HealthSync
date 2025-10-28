@@ -11,6 +11,7 @@ import {
   Bell,
 } from "lucide-react";
 import downloadBlob from "../components/Blob";
+import axios from "axios";
 
 export default function Appointments() {
   const [appointments, setAppointments] = useState([]);
@@ -73,11 +74,24 @@ export default function Appointments() {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
-  const handleDownload = (url, title) => {
-    const link = document.createElement("a");
-    link.href = url.replace("/upload/", "/upload/fl_attachment/");
-    link.download = title;
-    link.click();
+  // const handleDownload = (url, title) => {
+  //   const link = document.createElement("a");
+  //   link.href = url.replace("/upload/", "/upload/fl_attachment/");
+  //   link.download = title;
+  //   link.click();
+  // };
+  const handleDownloadDocument = async (docId, title) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEDN_URL}/api/documents/download/${docId}`
+      );
+      const link = document.createElement("a");
+      link.href = response.data.url;
+      link.download = title;
+      link.click();
+    } catch (error) {
+      setError("Failed to download document");
+    }
   };
 
   const toggleDoc = (id) => {

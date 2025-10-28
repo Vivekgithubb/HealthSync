@@ -37,21 +37,15 @@ router.post("/upload", protect, upload.single("file"), async (req, res) => {
       req.file,
       "healthsync/documents"
     );
-
-    // Generate a signed URL that expires in 1 hour
-    const signedUrl = cloudinary.utils.private_download_url(
-      cloudinaryResult.public_id,
-      cloudinaryResult.format,
-      { type: "authenticated", timestamp: Math.round(Date.now() / 1000) + 3600 }
-    );
+    console.log("Cloudinary upload result:", cloudinaryResult);
 
     const document = await Document.create({
       title: req.body.title || req.file.originalname,
       type: req.body.type || "other",
       description: req.body.description || "",
-      fileUrl: cloudinaryResult.secure_url,
-      downloadUrl: signedUrl,
-      publicId: cloudinaryResult.public_id,
+      fileUrl: cloudinaryResult.url,
+      downloadUrl: cloudinaryResult.downloadUrl, // This now has fl_attachment
+      publicId: cloudinaryResult.publicId,
       fileType: cloudinaryResult.format || req.file.mimetype,
       fileSize: cloudinaryResult.size,
       user: req.user._id,
@@ -63,7 +57,6 @@ router.post("/upload", protect, upload.single("file"), async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
-
 // @route   GET /api/documents
 // @desc    Get all documents for current user
 // @access  Private

@@ -11,46 +11,46 @@ const uploadToCloudinary = async (file, folder = "healthsync/documents") => {
     if (!file || !file.path) throw new Error("No file path found for upload");
 
     const ext = path.extname(file.originalname || "").toLowerCase();
-    const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
-    const resourceType = imageExtensions.includes(ext) ? "image" : "raw";
+    const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"];
 
-    // Create a timestamp and generate signature
-    const timestamp = Math.round(new Date().getTime() / 1000);
+    // Determine resource type - PDFs and documents should be 'raw'
+    const resourceType = imageExtensions.includes(ext) ? "image" : "raw";
 
     const result = await cloudinary.uploader.upload(file.path, {
       folder,
-      resource_type: "auto",
+      resource_type: resourceType,
       use_filename: true,
       unique_filename: true,
-      type: "authenticated",
-      access_mode: "authenticated",
-      timestamp: timestamp,
     });
 
     console.log("✅ Uploaded to Cloudinary:", result.secure_url);
 
-    console.log("✅ Upload successful:", {
-      secure_url: result.secure_url,
-      public_id: result.public_id,
-      resource_type: result.resource_type,
-      format: result.format,
-      bytes: result.bytes,
-    });
+    // Build download URL based on resource type
+    let downloadUrl;
+    if (resourceType === "raw") {
+      // For raw files (PDFs, docs), add fl_attachment as a query parameter
+      downloadUrl = `${result.secure_url}?fl_attachment`;
+    } else {
+      // For images, use the transformation in the path
+      downloadUrl = result.secure_url.replace(
+        "/upload/",
+        "/upload/fl_attachment/"
+      );
+    }
 
-    // Build a download URL that forces attachment:
-    // e.g. https://res.cloudinary.com/<cloud>/<resource_type>/upload/fl_attachment/v123/.../file.pdf
-    const downloadUrl = result.secure_url.replace(
-      "/upload/",
-      `/upload/fl_attachment/`
-    );
+    // Extract format from file extension if not provided by Cloudinary
+    const format =
+      result.format ||
+      ext.replace(".", "") ||
+      path.extname(file.originalname).slice(1).toLowerCase();
 
     return {
       url: result.secure_url,
       downloadUrl,
       publicId: result.public_id,
-      format: result.format,
+      format: format,
       size: result.bytes,
-      resourceType: result.resource_type || resourceType,
+      resourceType: result.resource_type,
     };
   } catch (error) {
     console.error("❌ Cloudinary upload failed:", error);
@@ -58,7 +58,6 @@ const uploadToCloudinary = async (file, folder = "healthsync/documents") => {
   }
 };
 
-module.exports = { uploadToCloudinary };
 const deleteFromCloudinary = async (publicId) => {
   try {
     await cloudinary.uploader.destroy(publicId);

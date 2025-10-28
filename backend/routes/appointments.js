@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Appointment = require("../models/Appointment");
+const cloudinary = require("cloudinary").v2;
 const { protect } = require("../middleware/auth");
 const {
   appointments,
@@ -39,5 +40,32 @@ router.put("/:id", protect);
 // @desc    Delete appointment
 // @access  Private
 router.delete("/:id", protect, deleteAppointment);
+// Add this route
+router.get("/download/:id", protect, async (req, res) => {
+  try {
+    const document = await Document.findById(req.params.id);
+
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    // Generate fresh signed URL valid for 1 hour
+    const signedUrl = cloudinary.utils.private_download_url(
+      document.publicId,
+      document.fileType,
+      {
+        type: "authenticated",
+        attachment: true, // Force download
+        resource_type: "raw",
+      }
+    );
+
+    res.json({ url: signedUrl });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error generating download URL", error: error.message });
+  }
+});
 
 module.exports = router;
