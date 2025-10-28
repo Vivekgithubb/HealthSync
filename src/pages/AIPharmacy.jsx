@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { pharmacyAPI, documentsAPI } from "../services/api";
 import {
   Pill,
@@ -11,6 +11,7 @@ import {
 import StructuredDataDisplay from "../components/StructuredDataDisplay";
 import FormattedSummary from "../components/FormattedSummary";
 import DocumentSelector from "../components/DocumentSelector";
+import Speech from "react-speech";
 
 export default function AIPharmacy() {
   const [selectedFile, setSelectedFile] = useState(null);
