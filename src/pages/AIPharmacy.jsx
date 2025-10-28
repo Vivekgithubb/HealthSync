@@ -1,8 +1,16 @@
 import { useState } from "react";
-import { pharmacyAPI } from "../services/api";
-import { Pill, Upload, Sparkles, AlertCircle } from "lucide-react";
+import { pharmacyAPI, documentsAPI } from "../services/api";
+import {
+  Pill,
+  Upload,
+  Sparkles,
+  AlertCircle,
+  FolderOpen,
+  FileText,
+} from "lucide-react";
 import StructuredDataDisplay from "../components/StructuredDataDisplay";
 import FormattedSummary from "../components/FormattedSummary";
+import DocumentSelector from "../components/DocumentSelector";
 
 export default function AIPharmacy() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -12,6 +20,7 @@ export default function AIPharmacy() {
     "The detailed summary will appear here after analysis."
   );
   const [structuredData, setStructuredData] = useState(null);
+  const [showDocumentSelector, setShowDocumentSelector] = useState(false);
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -24,6 +33,71 @@ export default function AIPharmacy() {
       setError("");
       setSummary("The detailed summary will appear here after analysis.");
       setStructuredData(null);
+    }
+  };
+
+  const handleDocumentSelect = async (document) => {
+    try {
+      setIsLoading(true);
+      setError("");
+      console.log("Starting document selection for:", document);
+
+      // Fetch the actual file using the downloadUrl
+      console.log("Fetching document from:", document.downloadUrl);
+      const response = await fetch(document.downloadUrl);
+      if (!response.ok) {
+        throw new Error("Failed to fetch document");
+      }
+
+      // Get file data as blob
+      const fileBlob = await response.blob();
+      console.log("Downloaded file:", {
+        size: fileBlob.size,
+        type: fileBlob.type,
+      });
+
+      // Create file from blob
+      const file = new File([fileBlob], document.title, {
+        type: fileBlob.type || "application/pdf", // Use the blob's type which is correct
+        lastModified: new Date().getTime(),
+      });
+      console.log("Created file object:", {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      });
+
+      setSelectedFile(file);
+      setSummary("Processing document, please wait...");
+      setStructuredData(null);
+      setShowDocumentSelector(false);
+
+      // Automatically analyze the selected document
+      const formData = new FormData();
+      formData.append("file", file);
+      console.log("Sending file for analysis:", {
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+      });
+
+      const analysisResponse = await pharmacyAPI.analyzePrescription(formData);
+      console.log("Analysis response received:", {
+        hasStructuredData: !!analysisResponse.data.structuredData,
+        hasSummary: !!analysisResponse.data.textSummary,
+        responseData: analysisResponse.data,
+      });
+    } catch (err) {
+      console.error("Document selection error:", err);
+      setError(
+        err.response?.data?.message || "Failed to process the selected document"
+      );
+      setSummary(
+        "Analysis failed. Please try again or select a different document."
+      );
+      setStructuredData(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -83,33 +157,48 @@ export default function AIPharmacy() {
           <span>Upload Prescription</span>
         </h2>
         <p className="text-gray-600 mb-6">Accepted: PDF, PNG, JPG — max 15MB</p>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-amber-500 transition-colors mb-4">
-          <input
-            type="file"
-            onChange={handleFileSelect}
-            accept=".pdf,image/png,image/jpeg"
-            className="hidden"
-            id="ai-upload"
-          />
-          <label htmlFor="ai-upload" className="cursor-pointer">
-            <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            {selectedFile ? (
-              <div>
-                <p className="text-blue-900 font-medium">{selectedFile.name}</p>
-                <p className="text-sm text-gray-500 mt-1">Click to change</p>
-              </div>
-            ) : (
-              <div>
-                <p className="text-gray-700 font-medium mb-1">
-                  Click to upload prescription
-                </p>
-                <p className="text-sm text-gray-500">
-                  PDF, PNG, JPG (Max 15MB)
-                </p>
-              </div>
-            )}
-          </label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Upload New File */}
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-amber-500 transition-colors">
+            <input
+              type="file"
+              onChange={handleFileSelect}
+              accept=".pdf,image/png,image/jpeg"
+              className="hidden"
+              id="ai-upload"
+            />
+            <label htmlFor="ai-upload" className="cursor-pointer">
+              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-700 font-medium mb-1">
+                Upload New Prescription
+              </p>
+              <p className="text-sm text-gray-500">PDF, PNG, JPG (Max 15MB)</p>
+            </label>
+          </div>
+
+          {/* Select from Documents */}
+          <button
+            onClick={() => setShowDocumentSelector(true)}
+            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-amber-500 transition-colors"
+          >
+            <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-700 font-medium mb-1">
+              Select from Documents
+            </p>
+            <p className="text-sm text-gray-500">
+              Choose from your uploaded files
+            </p>
+          </button>
         </div>
+
+        {selectedFile && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-blue-900 font-medium flex items-center">
+              <FileText className="w-5 h-5 mr-2" />
+              Selected: {selectedFile.name}
+            </p>
+          </div>
+        )}
         <button
           onClick={handleAnalyze}
           disabled={!selectedFile || isLoading}
@@ -131,6 +220,14 @@ export default function AIPharmacy() {
 
       {/* AI Summary */}
       <FormattedSummary text={summary} />
+
+      {/* Document Selector Modal */}
+      {showDocumentSelector && (
+        <DocumentSelector
+          onSelect={handleDocumentSelect}
+          onClose={() => setShowDocumentSelector(false)}
+        />
+      )}
 
       {/* Structured Data Display */}
       {structuredData && typeof structuredData === "object" && (

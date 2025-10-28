@@ -53,7 +53,18 @@ export const doctorsAPI = {
 // Documents
 export const documentsAPI = {
   getAll: () => api.get("/documents"),
-  getOne: (id) => api.get(`/documents/${id}`),
+  getOne: (id, asBlob = false) =>
+    api.get(
+      `/documents/${id}`,
+      asBlob
+        ? {
+            responseType: "blob",
+            headers: {
+              Accept: "application/pdf,image/*",
+            },
+          }
+        : undefined
+    ),
   upload: (formData) => {
     return api.post("/documents/upload", formData, {
       headers: {
@@ -86,12 +97,26 @@ export const appointmentsAPI = {
 
 // Pharmacy API
 export const pharmacyAPI = {
-  analyzePrescription: (formData) => {
-    return api.post("/pharmacy/analyze", formData, {
+  analyzePrescription: async (formData) => {
+    console.log("Sending analysis request with formData:", {
+      hasFile: formData.has("file"),
+      fileDetails: formData.get("file")
+        ? {
+            name: formData.get("file").name,
+            type: formData.get("file").type,
+            size: formData.get("file").size,
+          }
+        : null,
+    });
+
+    const response = await api.post("/pharmacy/analyze", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
+
+    console.log("Raw analysis response:", response.data);
+    return response;
   },
   searchDrug: (drugName) =>
     api.get(`/pharmacy/search/${encodeURIComponent(drugName)}`),

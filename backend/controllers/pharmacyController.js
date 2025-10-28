@@ -20,8 +20,24 @@ exports.analyzePrescription = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
-    const base64Data = bufferToBase64(req.file.buffer);
+
+    console.log("Received file:", {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
+
+    // Validate file type
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
     const mimeType = req.file.mimetype;
+
+    if (!allowedTypes.includes(mimeType)) {
+      return res.status(400).json({
+        message: `Invalid file type. Allowed types: PDF, JPEG, PNG. Received: ${mimeType}`,
+      });
+    }
+
+    const base64Data = bufferToBase64(req.file.buffer);
     const apiKey = process.env.GEMINI_API_KEY;
     const model = "gemini-2.5-flash-preview-09-2025";
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -86,21 +102,57 @@ exports.analyzePrescription = async (req, res) => {
       },
       systemInstruction: { parts: [{ text: systemPrompt }] },
     };
+    console.log("Sending request to Gemini API with payload:", {
+      mimeType,
+      dataLength: base64Data.length,
+      apiUrl,
+    });
+
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+
+    if (!response.ok) {
+      console.error("Gemini API Error:", {
+        status: response.status,
+        statusText: response.statusText,
+      });
+      const errorText = await response.text();
+      console.error("Error response:", errorText);
+      throw new Error(
+        `Gemini API error: ${response.status} ${response.statusText}`
+      );
+    }
+
     const result = await response.json();
+    console.log("Gemini API Response:", result);
+
     let structuredData = null;
-    if (result.candidates && result.candidates.length > 0) {
+
+    if (!result.candidates || result.candidates.length === 0) {
+      console.error("No candidates in response:", result);
+      throw new Error("No analysis results returned from Gemini API");
+    }
+
+    try {
       const jsonText = result.candidates[0].content.parts[0].text;
-      structuredData = JSON.parse(jsonText);
+      console.log("Parsing JSON response:", jsonText);
+      structuredData = safeJSONParse(jsonText);
+
+      if (!structuredData) {
+        throw new Error("Failed to parse structured data from response");
+      }
+    } catch (error) {
+      console.error("Error parsing Gemini response:", error);
+      throw new Error("Failed to process document analysis results");
     }
 
     // 2. Text summary
+    console.log("Generating text summary...");
     const summaryQuery =
-      "Based on the provided prescription document, generate a concise, easy-to-read, one-paragraph summary of the patient, the doctor, and the prescribed medications and usage directions. Focus on providing clear, patient-friendly information.";
+      "Based on the provided prescription document, generate a concise, easy-to-read, one-paragraph summary of the patient, the doctor, and the prescribed medications and usage directions. Format important information like names and medications in bold using ** markers. Focus on providing clear, patient-friendly information.";
     const summaryPayload = {
       contents: [
         {

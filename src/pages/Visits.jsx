@@ -48,7 +48,8 @@ export default function Visits() {
         setVisits(vis.data);
         setDoctors(drs.data);
         setDocs(dcs.data);
-      } catch (e) {
+      } catch (err) {
+        console.log(err);
         setError("Failed to load data");
       } finally {
         setLoading(false);
@@ -114,6 +115,7 @@ export default function Visits() {
       await visitsAPI.delete(id);
       setVisits((prev) => prev.filter((v) => v._id !== id));
     } catch (e) {
+      console.log(e);
       setError("Failed to delete visit");
     }
   };
