@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const Document = require("../models/Document");
 const { protect } = require("../middleware/auth");
+const cloudinary = require("cloudinary").v2;
 const {
   uploadToCloudinary,
   deleteFromCloudinary,
@@ -32,20 +33,26 @@ router.post("/upload", protect, upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Upload to Cloudinary
     const cloudinaryResult = await uploadToCloudinary(
       req.file,
       "healthsync/documents"
     );
 
-    // Create document record
+    // Generate a signed URL that expires in 1 hour
+    const signedUrl = cloudinary.utils.private_download_url(
+      cloudinaryResult.public_id,
+      cloudinaryResult.format,
+      { type: "authenticated", timestamp: Math.round(Date.now() / 1000) + 3600 }
+    );
+
     const document = await Document.create({
       title: req.body.title || req.file.originalname,
       type: req.body.type || "other",
       description: req.body.description || "",
-      fileUrl: cloudinaryResult.url,
-      publicId: cloudinaryResult.publicId,
-      fileType: req.file.mimetype,
+      fileUrl: cloudinaryResult.secure_url,
+      downloadUrl: signedUrl,
+      publicId: cloudinaryResult.public_id,
+      fileType: cloudinaryResult.format || req.file.mimetype,
       fileSize: cloudinaryResult.size,
       user: req.user._id,
       tags: req.body.tags ? JSON.parse(req.body.tags) : [],

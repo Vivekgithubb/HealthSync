@@ -10,6 +10,7 @@ import {
   X,
   Bell,
 } from "lucide-react";
+import downloadBlob from "../components/Blob";
 
 export default function Appointments() {
   const [appointments, setAppointments] = useState([]);
@@ -492,14 +493,26 @@ export default function Appointments() {
                             >
                               View
                             </a>
+
                             <a
-                              href={doc.downloadUrl}
+                              href={doc.downloadUrl || doc.fileUrl}
                               target="_blank"
                               rel="noopener noreferrer"
+                              download
                               className="text-green-600 text-sm hover:underline"
                             >
                               Download
                             </a>
+                            <button
+                              onClick={() =>
+                                downloadBlob(
+                                  doc.downloadUrl || doc.fileUrl,
+                                  doc.title
+                                )
+                              }
+                            >
+                              Download
+                            </button>
                           </div>
                         </div>
                       ))}
