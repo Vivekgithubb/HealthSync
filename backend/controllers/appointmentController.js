@@ -1,6 +1,36 @@
 import mongoose from "mongoose";
 import Appointment from "../models/Appointment.js";
 import Doctor from "../models/Doctor.js";
+import "../models/VisitHistory.js"; // Import for model registration
+
+// Check for missed appointments every 5 minutes
+export const checkMissedAppointments = async () => {
+  try {
+    const now = new Date();
+    // Find scheduled appointments that are in the past (plus 15 min grace period)
+    const cutoffTime = new Date(now.getTime() - 15 * 60000); // 15 minutes ago
+
+    const missedAppointments = await Appointment.find({
+      status: "scheduled",
+      appointmentDate: { $lt: now.toISOString().split("T")[0] },
+      $or: [
+        { appointmentTime: { $lt: now.toTimeString().slice(0, 5) } },
+        { appointmentDate: { $lt: cutoffTime.toISOString().split("T")[0] } },
+      ],
+    });
+
+    for (const apt of missedAppointments) {
+      apt.status = "missed";
+      apt.missedAt = now;
+      await apt.save();
+    }
+  } catch (error) {
+    console.error("Error checking missed appointments:", error);
+  }
+};
+
+// Start the checker when the server starts
+setInterval(checkMissedAppointments, 5 * 60 * 1000); // Run every 5 minutes
 
 export const appointments = async (req, res) => {
   try {
@@ -95,14 +125,45 @@ export const updateAppointment = async (req, res) => {
     const appointment = await Appointment.findOne({
       _id: req.params.id,
       user: req.user._id,
-    });
+    })
+      .populate("doctor")
+      .populate("documents");
 
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found" });
     }
 
-    Object.assign(appointment, req.body);
+    // Check if status is being changed to completed
+    const isCompletingAppointment =
+      req.body.status === "completed" && appointment.status !== "completed";
+
+    // Update appointment with allowed fields only
+    const allowedFields = [
+      "appointmentDate",
+      "appointmentTime",
+      "status",
+      "notes",
+    ];
+    allowedFields.forEach((field) => {
+      if (field in req.body) {
+        appointment[field] = req.body[field];
+      }
+    });
+
     await appointment.save();
+
+    // If status changed to completed, create visit history
+    if (isCompletingAppointment) {
+      const VisitHistory = mongoose.model("VisitHistory");
+      await VisitHistory.create({
+        visitDate: appointment.appointmentDate,
+        doctor: appointment.doctor._id,
+        reason: appointment.reason,
+        notes: `Converted from appointment: ${appointment.notes || ""}`,
+        documents: appointment.documents,
+        user: req.user._id,
+      });
+    }
 
     const populatedAppointment = await Appointment.findById(appointment._id)
       .populate("doctor")

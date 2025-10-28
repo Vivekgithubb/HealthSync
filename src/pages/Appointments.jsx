@@ -180,8 +180,16 @@ export default function Appointments() {
       setAppointments(apts.data);
       setShowEditModal(false);
       setEditAppointment(null);
-      setSuccess("Appointment updated");
-      setTimeout(() => setSuccess(""), 2500);
+
+      // Show appropriate success message based on status
+      if (payload.status === "completed") {
+        setSuccess(
+          "Appointment marked as completed and added to visit history"
+        );
+      } else {
+        setSuccess("Appointment updated");
+      }
+      setTimeout(() => setSuccess(""), 3500);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update appointment");
     } finally {
@@ -197,6 +205,10 @@ export default function Appointments() {
         return "bg-green-100 text-green-700";
       case "cancelled":
         return "bg-red-100 text-red-700";
+      case "missed":
+        return "bg-yellow-100 text-yellow-700";
+      case "rescheduled":
+        return "bg-purple-100 text-purple-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -687,19 +699,49 @@ export default function Appointments() {
                 )}
               </div>
               <div className="flex space-x-3 mt-3">
-                <button
-                  onClick={() => handleEditClick(a)}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(a._id)}
-                  className="flex-1 py-2 border border-red-500 text-red-600 rounded-md hover:bg-red-50 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Cancel</span>
-                </button>
+                {a.status === "missed" ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        handleEditClick({
+                          ...a,
+                          status: "scheduled",
+                          appointmentDate: tomorrow.toISOString().split("T")[0],
+                          notes: `Rescheduled from missed appointment on ${new Date(
+                            a.appointmentDate
+                          ).toLocaleDateString()}`,
+                        });
+                      }}
+                      className="flex-1 bg-purple-600 text-white py-2 rounded-md font-semibold hover:bg-purple-700 transition-colors"
+                    >
+                      Reschedule
+                    </button>
+                    <button
+                      onClick={() => handleEditClick(a)}
+                      className="flex-1 bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      Edit
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleEditClick(a)}
+                      className="flex-1 bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(a._id)}
+                      className="flex-1 py-2 border border-red-500 text-red-600 rounded-md hover:bg-red-50 transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Cancel</span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
