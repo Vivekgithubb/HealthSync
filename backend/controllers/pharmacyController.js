@@ -5,6 +5,16 @@ function bufferToBase64(buffer) {
   return buffer.toString("base64");
 }
 
+// Helper: Safely parse JSON with fallback
+function safeJSONParse(text, fallback = null) {
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("JSON Parse Error:", error.message);
+    return fallback;
+  }
+}
+
 exports.analyzePrescription = async (req, res) => {
   try {
     if (!req.file) {

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { pharmacyAPI } from "../services/api";
 import { Pill, Upload, Sparkles, AlertCircle } from "lucide-react";
+import StructuredDataDisplay from "../components/StructuredDataDisplay";
+import FormattedSummary from "../components/FormattedSummary";
 
 export default function AIPharmacy() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -128,28 +130,12 @@ export default function AIPharmacy() {
       </div>
 
       {/* AI Summary */}
-      <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-blue-900 mb-4">AI Summary</h3>
-        <div className="text-gray-800 whitespace-pre-line">{summary}</div>
-      </div>
+      <FormattedSummary text={summary} />
 
-      {/* Structured Data Extraction */}
-      <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-blue-900 mb-4">
-          Structured Data Extraction
-        </h3>
-        <div className="text-gray-800 whitespace-pre-line">
-          {structuredData && typeof structuredData === "object" ? (
-            <pre>{JSON.stringify(structuredData, null, 2)}</pre>
-          ) : (
-            <span>
-              {structuredData === "error"
-                ? "No structured data available."
-                : "No data yet."}
-            </span>
-          )}
-        </div>
-      </div>
+      {/* Structured Data Display */}
+      {structuredData && typeof structuredData === "object" && (
+        <StructuredDataDisplay data={structuredData} />
+      )}
 
       {/* Info Footer */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start space-x-3">

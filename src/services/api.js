@@ -48,7 +48,6 @@ export const doctorsAPI = {
   getOne: (id) => api.get(`/doctors/${id}`),
   create: (data) => api.post("/doctors", data),
   update: (id, data) => api.put(`/doctors/${id}`, data),
-  delete: (id) => api.delete(`/doctors/${id}`),
 };
 
 // Documents
@@ -85,7 +84,7 @@ export const appointmentsAPI = {
   delete: (id) => api.delete(`/appointments/${id}`),
 };
 
-// Pharmacy
+// Pharmacy API
 export const pharmacyAPI = {
   analyzePrescription: (formData) => {
     return api.post("/pharmacy/analyze", formData, {

@@ -7,6 +7,14 @@ const { protect } = require("../middleware/auth");
 const fs = require("fs");
 const path = require("path");
 
+// Error handler middleware
+const handleError = (err, res) => {
+  console.error("Error:", err);
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal server error";
+  res.status(statusCode).json({ error: message });
+};
+
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, "..", "uploads");
 if (!fs.existsSync(uploadDir)) {
@@ -29,7 +37,13 @@ router.post(
   "/analyze",
   protect,
   memoryUpload.single("file"),
-  analyzePrescription
+  async (req, res) => {
+    try {
+      await analyzePrescription(req, res);
+    } catch (error) {
+      handleError(error, res);
+    }
+  }
 );
 
 // Initialize Gemini AI
