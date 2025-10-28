@@ -1,4 +1,6 @@
+import mongoose from "mongoose";
 import Appointment from "../models/Appointment.js";
+import Doctor from "../models/Doctor.js";
 
 export const appointments = async (req, res) => {
   try {
@@ -50,8 +52,23 @@ export const findAppointment = async (req, res) => {
 };
 export const newAppointment = async (req, res) => {
   try {
+    let doctorId;
+
+    // CASE 1: doctor is manually entered
+    if (typeof req.body.doctor === "object" && req.body.doctor !== null) {
+      const newDoctor = await Doctor.create({
+        ...req.body.doctor,
+        user: req.user._id,
+      });
+      doctorId = newDoctor._id;
+    } else {
+      // CASE 2: doctor is selected from dropdown (ID)
+      doctorId = req.body.doctor;
+    }
+
     const appointment = await Appointment.create({
       ...req.body,
+      doctor: doctorId, // ensure this is always an ObjectId
       user: req.user._id,
     });
 
@@ -59,9 +76,17 @@ export const newAppointment = async (req, res) => {
       .populate("doctor")
       .populate("documents");
 
-    res.status(201).json(populatedAppointment);
+    res.status(201).json({
+      status: "success",
+      data: populatedAppointment,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("❌ Error creating appointment:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Server error while creating appointment",
+      error: error.message,
+    });
   }
 };
 

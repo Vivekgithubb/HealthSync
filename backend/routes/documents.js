@@ -1,94 +1,108 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const multer = require('multer');
-const Document = require('../models/Document');
-const { protect } = require('../middleware/auth');
-const { uploadToCloudinary, deleteFromCloudinary } = require('../utils/cloudinary');
+const multer = require("multer");
+const Document = require("../models/Document");
+const { protect } = require("../middleware/auth");
+const {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} = require("../utils/cloudinary");
 
 // Configure multer for file upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/');
+    cb(null, "uploads/");
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
+    cb(null, Date.now() + "-" + file.originalname);
+  },
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+});
+
+// @desc    Upload document to Cloudinary
+// @access  Private
+// @route   POST /api/documents/upload
+router.post("/upload", protect, upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Upload to Cloudinary
+    const cloudinaryResult = await uploadToCloudinary(
+      req.file,
+      "healthsync/documents"
+    );
+
+    // Create document record
+    const document = await Document.create({
+      title: req.body.title || req.file.originalname,
+      type: req.body.type || "other",
+      description: req.body.description || "",
+      fileUrl: cloudinaryResult.url,
+      publicId: cloudinaryResult.publicId,
+      fileType: req.file.mimetype,
+      fileSize: cloudinaryResult.size,
+      user: req.user._id,
+      tags: req.body.tags ? JSON.parse(req.body.tags) : [],
+    });
+
+    res.status(201).json(document);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
 });
 
 // @route   GET /api/documents
 // @desc    Get all documents for current user
 // @access  Private
-router.get('/', protect, async (req, res) => {
+router.get("/", protect, async (req, res) => {
   try {
-    const documents = await Document.find({ user: req.user._id }).sort({ uploadDate: -1 });
+    const documents = await Document.find({ user: req.user._id }).sort({
+      uploadDate: -1,
+    });
     res.json(documents);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
 // @route   GET /api/documents/:id
 // @desc    Get single document
 // @access  Private
-router.get('/:id', protect, async (req, res) => {
+router.get("/:id", protect, async (req, res) => {
   try {
-    const document = await Document.findOne({ _id: req.params.id, user: req.user._id });
-    
-    if (!document) {
-      return res.status(404).json({ message: 'Document not found' });
-    }
-    
-    res.json(document);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-// @route   POST /api/documents/upload
-// @desc    Upload document to Cloudinary
-// @access  Private
-router.post('/upload', protect, upload.single('file'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
-    }
-
-    // Upload to Cloudinary
-    const cloudinaryResult = await uploadToCloudinary(req.file, 'healthsync/documents');
-
-    // Create document record
-    const document = await Document.create({
-      title: req.body.title || req.file.originalname,
-      type: req.body.type || 'other',
-      description: req.body.description || '',
-      fileUrl: cloudinaryResult.url,
-      publicId: cloudinaryResult.publicId,
-      fileType: req.file.mimetype,
-      fileSize: cloudinaryResult.size,
+    const document = await Document.findOne({
+      _id: req.params.id,
       user: req.user._id,
-      tags: req.body.tags ? JSON.parse(req.body.tags) : []
     });
 
-    res.status(201).json(document);
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    res.json(document);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
 // @route   PUT /api/documents/:id
 // @desc    Update document metadata
 // @access  Private
-router.put('/:id', protect, async (req, res) => {
+router.put("/:id", protect, async (req, res) => {
   try {
-    const document = await Document.findOne({ _id: req.params.id, user: req.user._id });
-    
+    const document = await Document.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+
     if (!document) {
-      return res.status(404).json({ message: 'Document not found' });
+      return res.status(404).json({ message: "Document not found" });
     }
 
     // Update allowed fields
@@ -100,19 +114,22 @@ router.put('/:id', protect, async (req, res) => {
     await document.save();
     res.json(document);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
 // @route   DELETE /api/documents/:id
 // @desc    Delete document
 // @access  Private
-router.delete('/:id', protect, async (req, res) => {
+router.delete("/:id", protect, async (req, res) => {
   try {
-    const document = await Document.findOne({ _id: req.params.id, user: req.user._id });
-    
+    const document = await Document.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+
     if (!document) {
-      return res.status(404).json({ message: 'Document not found' });
+      return res.status(404).json({ message: "Document not found" });
     }
 
     // Delete from Cloudinary
@@ -120,10 +137,10 @@ router.delete('/:id', protect, async (req, res) => {
 
     // Delete from database
     await document.deleteOne();
-    
-    res.json({ message: 'Document deleted successfully' });
+
+    res.json({ message: "Document deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
