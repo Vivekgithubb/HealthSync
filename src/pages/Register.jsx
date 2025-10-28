@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { Activity } from 'lucide-react';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/UseAuth";
+import { Activity } from "lucide-react";
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    phone: '',
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -21,13 +21,18 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
-    const result = await register(formData.name, formData.email, formData.password, formData.phone);
-    
+    const result = await register(
+      formData.name,
+      formData.email,
+      formData.password,
+      formData.phone
+    );
+
     if (result.success) {
-      navigate('/');
+      navigate("/");
     } else {
       setError(result.error);
     }
@@ -48,7 +53,9 @@ export default function Register() {
 
         {/* Register Card */}
         <div className="bg-white rounded-lg shadow-md p-8 border border-gray-300">
-          <h2 className="text-2xl font-semibold text-blue-900 mb-6">Register</h2>
+          <h2 className="text-2xl font-semibold text-blue-900 mb-6">
+            Register
+          </h2>
 
           {error && (
             <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-md text-red-700 text-sm">
@@ -123,13 +130,16 @@ export default function Register() {
               disabled={loading}
               className="w-full bg-amber-500 text-white py-3 rounded-md font-semibold hover:bg-amber-500/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating account...' : 'Register'}
+              {loading ? "Creating account..." : "Register"}
             </button>
           </form>
 
           <p className="mt-6 text-center text-gray-500 text-sm">
-            Already have an account?{' '}
-            <Link to="/login" className="text-amber-600 hover:underline font-medium">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-amber-600 hover:underline font-medium"
+            >
               Login here
             </Link>
           </p>

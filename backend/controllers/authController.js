@@ -66,8 +66,13 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     // Find user and include password
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Something is missing, check again" });
+    }
     const user = await User.findOne({ email }).select("+password");
-
+    console.log(user);
     if (user && (await user.comparePassword(password))) {
       createSendToken(user, 200, res);
     } else {

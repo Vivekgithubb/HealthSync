@@ -1,29 +1,34 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { Activity } from 'lucide-react';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/UseAuth";
+import { Activity } from "lucide-react";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-
+  console.log(import.meta.env.VITE_BACKEND_URL);
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    console.log("Logging");
+    setError("");
     setLoading(true);
-
-    const result = await login(email, password);
-    
-    if (result.success) {
-      navigate('/');
-    } else {
-      setError(result.error);
+    try {
+      const result = await login(email, password);
+      console.log("Logging done");
+      if (result.success) {
+        navigate("/");
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -82,13 +87,16 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-amber-500 text-white py-3 rounded-md font-semibold hover:bg-amber-500/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? "Logging in..." : "Login"}
             </button>
           </form>
 
           <p className="mt-6 text-center text-gray-500 text-sm">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-amber-500 hover:underline font-medium">
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="text-amber-500 hover:underline font-medium"
+            >
               Register here
             </Link>
           </p>

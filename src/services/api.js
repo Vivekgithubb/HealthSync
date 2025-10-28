@@ -1,18 +1,20 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL1 = "http://localhost:5000/api"; // for localhost
+const API_URL = import.meta.env.VITE_BACKEND_URL;
+//hotspot
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Add token to requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -24,9 +26,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }
@@ -34,29 +36,29 @@ api.interceptors.response.use(
 
 // Authentication
 export const authAPI = {
-  register: (data) => api.post('/auth/register', data),
-  login: (data) => api.post('/auth/login', data),
-  getProfile: () => api.get('/auth/me'),
-  updateProfile: (data) => api.put('/auth/profile', data),
+  register: (data) => api.post("/auth/register", data),
+  login: (data) => api.post("/auth/login", data),
+  getProfile: () => api.get("/auth/me"),
+  updateProfile: (data) => api.put("/auth/profile", data),
 };
 
 // Doctors
 export const doctorsAPI = {
-  getAll: () => api.get('/doctors'),
+  getAll: () => api.get("/doctors"),
   getOne: (id) => api.get(`/doctors/${id}`),
-  create: (data) => api.post('/doctors', data),
+  create: (data) => api.post("/doctors", data),
   update: (id, data) => api.put(`/doctors/${id}`, data),
   delete: (id) => api.delete(`/doctors/${id}`),
 };
 
 // Documents
 export const documentsAPI = {
-  getAll: () => api.get('/documents'),
+  getAll: () => api.get("/documents"),
   getOne: (id) => api.get(`/documents/${id}`),
   upload: (formData) => {
-    return api.post('/documents/upload', formData, {
+    return api.post("/documents/upload", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
   },
@@ -66,19 +68,19 @@ export const documentsAPI = {
 
 // Visits
 export const visitsAPI = {
-  getAll: () => api.get('/visits'),
+  getAll: () => api.get("/visits"),
   getOne: (id) => api.get(`/visits/${id}`),
-  create: (data) => api.post('/visits', data),
+  create: (data) => api.post("/visits", data),
   update: (id, data) => api.put(`/visits/${id}`, data),
   delete: (id) => api.delete(`/visits/${id}`),
 };
 
 // Appointments
 export const appointmentsAPI = {
-  getAll: () => api.get('/appointments'),
-  getUpcoming: () => api.get('/appointments/upcoming'),
+  getAll: () => api.get("/appointments"),
+  getUpcoming: () => api.get("/appointments/upcoming"),
   getOne: (id) => api.get(`/appointments/${id}`),
-  create: (data) => api.post('/appointments', data),
+  create: (data) => api.post("/appointments", data),
   update: (id, data) => api.put(`/appointments/${id}`, data),
   delete: (id) => api.delete(`/appointments/${id}`),
 };
@@ -86,14 +88,16 @@ export const appointmentsAPI = {
 // Pharmacy
 export const pharmacyAPI = {
   parsePrescription: (formData) => {
-    return api.post('/pharmacy/parse-prescription', formData, {
+    return api.post("/pharmacy/parse-prescription", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
   },
-  searchDrug: (drugName) => api.get(`/pharmacy/search/${encodeURIComponent(drugName)}`),
-  getAlternatives: (drugName) => api.get(`/pharmacy/alternatives/${encodeURIComponent(drugName)}`),
+  searchDrug: (drugName) =>
+    api.get(`/pharmacy/search/${encodeURIComponent(drugName)}`),
+  getAlternatives: (drugName) =>
+    api.get(`/pharmacy/alternatives/${encodeURIComponent(drugName)}`),
 };
 
 export default api;
