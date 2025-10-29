@@ -8,6 +8,7 @@ const {
   login,
   me,
   profile,
+  verifyOtp,
 } = require("../controllers/authController");
 
 // @route   POST /api/auth/register
@@ -29,5 +30,7 @@ router.get("/me", protect, me);
 // @desc    Update user profile
 // @access  Private
 router.put("/profile", protect, profile);
+
+router.post("/verifyOtp", verifyOtp);
 
 module.exports = router;

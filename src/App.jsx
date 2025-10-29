@@ -1,21 +1,29 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Doctors from './pages/Doctors';
-import Documents from './pages/Documents';
-import Visits from './pages/Visits';
-import Appointments from './pages/Appointments';
-import AIPharmacy from './pages/AIPharmacy';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Doctors from "./pages/Doctors";
+import Documents from "./pages/Documents";
+import Visits from "./pages/Visits";
+import Appointments from "./pages/Appointments";
+import AIPharmacy from "./pages/AIPharmacy";
+import VerifyOtp from "./pages/VerifyOtp";
 
 // Placeholder pages - will be created next
 const PlaceholderPage = ({ title }) => (
   <div className="bg-white rounded-lg shadow-md p-8 border border-gray-200">
     <h1 className="text-3xl font-bold text-blue-900 mb-4">{title}</h1>
-    <p className="text-gray-500">This page is under construction. Full implementation coming soon!</p>
+    <p className="text-gray-500">
+      This page is under construction. Full implementation coming soon!
+    </p>
   </div>
 );
 
@@ -26,8 +34,9 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
 
+          <Route path="/register" element={<Register />} />
+          <Route path="/verifyOtp" element={<VerifyOtp />} />
           {/* Protected routes */}
           <Route
             path="/"

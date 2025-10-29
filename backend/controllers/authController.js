@@ -2,6 +2,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import axios from "axios";
+import { sendEmail } from "../utils/reminderService.js";
 // Generate JWT Token
 
 const generateToken = (id) => {
@@ -45,6 +46,8 @@ export const register = async (req, res) => {
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = Date.now() + 5 * 60 * 1000; // 5 min
 
     // Create user
     const user = await User.create({
@@ -52,10 +55,50 @@ export const register = async (req, res) => {
       email,
       password,
       phone,
+      isverified: false,
+      otpExpiry,
+      otp,
     });
+    console.log(user);
+    // Send OTP email
+    await sendEmail(
+      email,
+      "Your HealthSync OTP Code",
+      `Hello ${name},\n\nYour OTP code is ${otp}. It will expire in 5 minutes.\n\nThank you,\nHealthSync Team`
+    );
 
-    if (!user) return res.status(400).json({ message: "Invalid user data" });
+    // if (!user) return res.status(400).json({ message: "Invalid user data" });
+    // createSendToken(user, 200, res);
+    res.status(200).json({
+      status: true,
+      message: "OTP sent to email. Please verify to complete registration.",
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await User.findOne({ email });
+    console.log("Verifying OTP for user:", user, "with OTP:", otp);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.isverified)
+      return res.status(400).json({ message: "Already verified" });
+
+    if (user.otp !== otp || Date.now() > user.otpExpiry)
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+
+    user.isverified = true;
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+
+    await user.save();
+    // ✅ Now issue JWT only after OTP is verified
     createSendToken(user, 200, res);
+    // res.status(200).json({ message: "Verified Succesfully , thank you" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -91,7 +134,8 @@ export const login = async (req, res) => {
 
     // Find user and include password
     const user = await User.findOne({ email }).select("+password");
-    console.log(user);
+    if (!user.isverified)
+      return res.status(403).json({ message: "Please verify your account" });
     if (user && (await user.comparePassword(password))) {
       createSendToken(user, 200, res);
     } else {

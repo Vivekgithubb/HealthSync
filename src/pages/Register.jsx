@@ -30,9 +30,9 @@ export default function Register() {
       formData.password,
       formData.phone
     );
-
+    console.log("Registration result:", result);
     if (result.success) {
-      navigate("/login");
+      navigate("/verifyOtp", { state: { email: formData.email } });
     } else {
       setError(result.error);
     }

@@ -26,12 +26,12 @@ const __dirname = path.dirname(__filename);
 // Middleware
 app.use(
   cors({
-    // origin: [
-    //   process.env.FRONTEND_URL,
-    //   "http://localhost:5173",
-    //   "http://192.168.1.128:5173",
-    // ],
-    origin: true,
+    origin: [
+      process.env.FRONTEND_URL,
+      "http://localhost:5173",
+      "http://192.168.1.128:5173",
+      "https://healthsync-frontend.onrender.com",
+    ],
     credentials: true,
   })
 );

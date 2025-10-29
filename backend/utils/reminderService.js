@@ -134,4 +134,29 @@ const sendAppointmentReminders = async () => {
   }
 };
 
-module.exports = { sendAppointmentReminders };
+const sendEmail = async (to, subject, text) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail", // or use your custom SMTP
+      auth: {
+        user: process.env.EMAIL_USER, // your Gmail address
+        pass: process.env.EMAIL_PASSWORD, // app password (not normal password)
+      },
+    });
+
+    const mailOptions = {
+      from: `"HealthSync" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Email sent to ${to}`);
+  } catch (error) {
+    console.error("❌ Error sending email:", error.message);
+    throw new Error("Failed to send email");
+  }
+};
+
+module.exports = { sendAppointmentReminders, sendEmail };

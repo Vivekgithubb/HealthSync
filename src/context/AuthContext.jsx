@@ -72,14 +72,24 @@ export const AuthProvider = ({ children }) => {
   const register = async (name, email, password, phone) => {
     try {
       const response = await authAPI.register({ name, email, password, phone });
-      const { token, ...userData } = response.data;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(userData));
-      setUser(userData.data.user);
-
-      return { success: true };
+      console.log("Registration response:", response.data);
+      // For OTP registration flow, backend returns only success + message
+      if (response.data.status) {
+        return {
+          success: true,
+          message: response.data.message,
+        };
+      } else {
+        return {
+          success: false,
+          error: response.data.message || "Registration failed",
+        };
+      }
     } catch (error) {
+      console.error(
+        "Registration error:",
+        error.response?.data || error.message
+      );
       return {
         success: false,
         error: error.response?.data?.message || "Registration failed",
