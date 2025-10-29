@@ -1,24 +1,28 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const connectDB = require("./config/database");
-const helmet = require("helmet");
-const cron = require("node-cron");
-const cookieParser = require("cookie-parser");
-const authRoutes = require("./routes/auth");
-const doctorRoutes = require("./routes/doctors");
-const appointmentRoute = require("./routes/appointments");
-const documentRoutes = require("./routes/documents");
-const pharmacyRoutes = require("./routes/pharmacy");
-const visitRoutes = require("./routes/visits");
-const xss = require("xss");
-const rateLimit = require("express-rate-limit");
-const { sendAppointmentReminders } = require("./utils/reminderService");
-
+import dotenv from "dotenv";
+import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+import cors from "cors";
+import connectDB from "./config/database.js";
+import helmet from "helmet";
+import cron from "node-cron";
+import cookieParser from "cookie-parser";
+import authRoutes from "./routes/auth.js";
+import doctorRoutes from "./routes/doctors.js";
+import appointmentRoute from "./routes/appointments.js";
+import documentRoutes from "./routes/documents.js";
+import pharmacyRoutes from "./routes/pharmacy.js";
+import visitRoutes from "./routes/visits.js";
+import xss from "xss";
+import rateLimit from "express-rate-limit";
+import { sendAppointmentReminders } from "./utils/reminderService.js";
 // Connect to database
+dotenv.config();
 connectDB();
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // Middleware
 app.use(
   cors({
@@ -132,6 +136,14 @@ app.use((err, req, res, next) => {
   });
 });
 
+// After your routes:
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+  app.get(/.*/, (req, res) =>
+    res.sendFile(path.resolve(__dirname, "../frontend/dist/index.html"))
+  );
+}
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

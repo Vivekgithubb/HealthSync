@@ -91,6 +91,7 @@ export const newAppointment = async (req, res) => {
         doctorData = JSON.parse(doctorData);
       } catch (err) {
         // Ignore if not JSON
+        console.log(err);
       }
     }
 
@@ -138,46 +139,6 @@ export const newAppointment = async (req, res) => {
     });
   }
 };
-// export const newAppointment = async (req, res) => {
-//   try {
-//     let doctorId;
-
-//     // CASE 1: doctor is manually entered
-//     if (typeof req.body.doctor === "object" && req.body.doctor !== null) {
-//       const newDoctor = await Doctor.create({
-//         ...req.body.doctor,
-//         user: req.user._id,
-//       });
-//       doctorId = newDoctor._id;
-//     } else {
-//       // CASE 2: doctor is selected from dropdown (ID)
-//       doctorId = req.body.doctor;
-//     }
-
-//     const appointment = await Appointment.create({
-//       ...req.body,
-//       doctor: doctorId, // ensure this is always an ObjectId
-//       user: req.user._id,
-//     });
-
-//     const populatedAppointment = await Appointment.findById(appointment._id)
-//       .populate("doctor")
-//       .populate("documents");
-
-//     res.status(201).json({
-//       status: "success",
-//       data: populatedAppointment,
-//     });
-//   } catch (error) {
-//     console.error("❌ Error creating appointment:", error);
-//     res.status(500).json({
-//       status: "error",
-//       message: "Server error while creating appointment",
-//       error: error.message,
-//     });
-//   }
-// };
-
 export const updateAppointment = async (req, res) => {
   try {
     const appointment = await Appointment.findOne({
