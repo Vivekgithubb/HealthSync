@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API_URL1 = "http://localhost:5000/api"; // local fallback
-const API_URL = import.meta.env.VITE_BACKEND_URL || API_URL1;
+const API_URL = import.meta.env.VITE_BACKEND_URL;
 //hotspot
 
 // Create axios instance

@@ -17,7 +17,7 @@ import xss from "xss";
 import rateLimit from "express-rate-limit";
 import { sendAppointmentReminders } from "./utils/reminderService.js";
 // Connect to database
-dotenv.config();
+dotenv.config({ path: "./.env" });
 connectDB();
 
 const app = express();
@@ -31,6 +31,7 @@ app.use(
       "http://localhost:5173",
       "http://192.168.1.128:5173",
       "https://healthsync-frontend.onrender.com",
+      "https: //healthsyncc.vercel.app",
       "https://healthsync-1-87la.onrender.com",
     ],
     credentials: true,
