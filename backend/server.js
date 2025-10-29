@@ -31,6 +31,7 @@ app.use(
       "http://localhost:5173",
       "http://192.168.1.128:5173",
       "https://healthsync-frontend.onrender.com",
+      "https://healthsync-1-87la.onrender.com",
     ],
     credentials: true,
   })
