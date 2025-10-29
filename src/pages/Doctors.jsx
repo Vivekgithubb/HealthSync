@@ -1,6 +1,16 @@
-import { useState, useEffect } from 'react';
-import { doctorsAPI } from '../services/api';
-import { Users, Plus, Edit, Trash2, X, MapPin, Phone, Mail, Clock } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { doctorsAPI } from "../services/api";
+import {
+  Users,
+  Plus,
+  Edit,
+  Trash2,
+  X,
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+} from "lucide-react";
 
 export default function Doctors() {
   const [doctors, setDoctors] = useState([]);
@@ -8,21 +18,21 @@ export default function Doctors() {
   const [showForm, setShowForm] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    specialty: '',
-    clinic: '',
-    phone: '',
-    email: '',
-    workingHours: '9:00 AM - 5:00 PM',
+    name: "",
+    specialty: "",
+    clinic: "",
+    phone: "",
+    email: "",
+    workingHours: "9:00 AM - 5:00 PM",
     address: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: ''
-    }
+      street: "",
+      city: "",
+      state: "",
+      zipCode: "",
+    },
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     loadDoctors();
@@ -33,7 +43,7 @@ export default function Doctors() {
       const response = await doctorsAPI.getAll();
       setDoctors(response.data);
     } catch (error) {
-      setError('Failed to load doctors');
+      setError("Failed to load doctors");
     } finally {
       setLoading(false);
     }
@@ -41,11 +51,11 @@ export default function Doctors() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
       setFormData({
         ...formData,
-        [parent]: { ...formData[parent], [child]: value }
+        [parent]: { ...formData[parent], [child]: value },
       });
     } else {
       setFormData({ ...formData, [name]: value });
@@ -54,42 +64,42 @@ export default function Doctors() {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      specialty: '',
-      clinic: '',
-      phone: '',
-      email: '',
-      workingHours: '9:00 AM - 5:00 PM',
+      name: "",
+      specialty: "",
+      clinic: "",
+      phone: "",
+      email: "",
+      workingHours: "9:00 AM - 5:00 PM",
       address: {
-        street: '',
-        city: '',
-        state: '',
-        zipCode: ''
-      }
+        street: "",
+        city: "",
+        state: "",
+        zipCode: "",
+      },
     });
     setEditingDoctor(null);
     setShowForm(false);
-    setError('');
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
       if (editingDoctor) {
         await doctorsAPI.update(editingDoctor._id, formData);
-        setSuccess('Doctor updated successfully!');
+        setSuccess("Doctor updated successfully!");
       } else {
         await doctorsAPI.create(formData);
-        setSuccess('Doctor added successfully!');
+        setSuccess("Doctor added successfully!");
       }
       await loadDoctors();
       resetForm();
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
-      setError(error.response?.data?.message || 'Operation failed');
+      setError(error.response?.data?.message || "Operation failed");
     }
   };
 
@@ -100,28 +110,29 @@ export default function Doctors() {
       specialty: doctor.specialty,
       clinic: doctor.clinic,
       phone: doctor.phone,
-      email: doctor.email || '',
-      workingHours: doctor.workingHours || '9:00 AM - 5:00 PM',
+      email: doctor.email || "",
+      workingHours: doctor.workingHours || "9:00 AM - 5:00 PM",
       address: doctor.address || {
-        street: '',
-        city: '',
-        state: '',
-        zipCode: ''
-      }
+        street: "",
+        city: "",
+        state: "",
+        zipCode: "",
+      },
     });
     setShowForm(true);
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this doctor?')) return;
+    if (!window.confirm("Are you sure you want to delete this doctor?")) return;
 
     try {
       await doctorsAPI.delete(id);
-      setSuccess('Doctor deleted successfully!');
+      setSuccess("Doctor deleted successfully!");
       await loadDoctors();
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
-      setError('Failed to delete doctor');
+      console.log(error);
+      setError("Failed to delete doctor");
     }
   };
 
@@ -169,7 +180,7 @@ export default function Doctors() {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-semibold text-blue-900">
-                  {editingDoctor ? 'Edit Doctor' : 'Add New Doctor'}
+                  {editingDoctor ? "Edit Doctor" : "Add New Doctor"}
                 </h2>
                 <button
                   onClick={resetForm}
@@ -272,7 +283,9 @@ export default function Doctors() {
 
                 {/* Address Section */}
                 <div className="pt-4 border-t border-gray-200">
-                  <h3 className="text-lg font-semibold text-blue-900 mb-4">Address</h3>
+                  <h3 className="text-lg font-semibold text-blue-900 mb-4">
+                    Address
+                  </h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-blue-900 mb-2">
@@ -338,7 +351,7 @@ export default function Doctors() {
                     type="submit"
                     className="flex-1 bg-amber-500 text-white py-3 rounded-md font-semibold hover:bg-amber-600 transition-colors"
                   >
-                    {editingDoctor ? 'Update Doctor' : 'Add Doctor'}
+                    {editingDoctor ? "Update Doctor" : "Add Doctor"}
                   </button>
                   <button
                     type="button"
@@ -358,8 +371,12 @@ export default function Doctors() {
       {doctors.length === 0 ? (
         <div className="bg-white rounded-lg shadow-md p-12 text-center border border-gray-200">
           <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-blue-900 mb-2">No doctors yet</h3>
-          <p className="text-gray-500 mb-6">Add your first healthcare provider to get started</p>
+          <h3 className="text-xl font-semibold text-blue-900 mb-2">
+            No doctors yet
+          </h3>
+          <p className="text-gray-500 mb-6">
+            Add your first healthcare provider to get started
+          </p>
           <button
             onClick={() => setShowForm(true)}
             className="bg-amber-500 text-white px-6 py-2 rounded-md font-semibold hover:bg-amber-600 transition-colors"
@@ -380,7 +397,9 @@ export default function Doctors() {
                     <Users className="w-6 h-6 text-amber-600" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-blue-900">{doctor.name}</h3>
+                    <h3 className="text-lg font-semibold text-blue-900">
+                      {doctor.name}
+                    </h3>
                     <p className="text-sm text-gray-500">{doctor.specialty}</p>
                   </div>
                 </div>
@@ -391,7 +410,7 @@ export default function Doctors() {
                   <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
                   <span className="text-gray-600">{doctor.clinic}</span>
                 </div>
-                
+
                 {doctor.address?.city && (
                   <div className="flex items-start space-x-2 text-sm">
                     <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />

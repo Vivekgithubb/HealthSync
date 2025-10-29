@@ -82,23 +82,42 @@ export const findAppointment = async (req, res) => {
 };
 export const newAppointment = async (req, res) => {
   try {
+    let doctorData = req.body.doctor;
     let doctorId;
 
+    // ✅ Parse JSON if needed
+    if (typeof doctorData === "string") {
+      try {
+        doctorData = JSON.parse(doctorData);
+      } catch (err) {
+        // Ignore if not JSON
+      }
+    }
+
     // CASE 1: doctor is manually entered
-    if (typeof req.body.doctor === "object" && req.body.doctor !== null) {
-      const newDoctor = await Doctor.create({
-        ...req.body.doctor,
+    if (typeof doctorData === "object" && doctorData !== null) {
+      const existingDoctor = await Doctor.findOne({
+        name: doctorData.name,
         user: req.user._id,
       });
-      doctorId = newDoctor._id;
+
+      if (existingDoctor) {
+        doctorId = existingDoctor._id;
+      } else {
+        const newDoctor = await Doctor.create({
+          ...doctorData,
+          user: req.user._id,
+        });
+        doctorId = newDoctor._id;
+      }
     } else {
       // CASE 2: doctor is selected from dropdown (ID)
-      doctorId = req.body.doctor;
+      doctorId = doctorData;
     }
 
     const appointment = await Appointment.create({
       ...req.body,
-      doctor: doctorId, // ensure this is always an ObjectId
+      doctor: doctorId,
       user: req.user._id,
     });
 
@@ -119,6 +138,45 @@ export const newAppointment = async (req, res) => {
     });
   }
 };
+// export const newAppointment = async (req, res) => {
+//   try {
+//     let doctorId;
+
+//     // CASE 1: doctor is manually entered
+//     if (typeof req.body.doctor === "object" && req.body.doctor !== null) {
+//       const newDoctor = await Doctor.create({
+//         ...req.body.doctor,
+//         user: req.user._id,
+//       });
+//       doctorId = newDoctor._id;
+//     } else {
+//       // CASE 2: doctor is selected from dropdown (ID)
+//       doctorId = req.body.doctor;
+//     }
+
+//     const appointment = await Appointment.create({
+//       ...req.body,
+//       doctor: doctorId, // ensure this is always an ObjectId
+//       user: req.user._id,
+//     });
+
+//     const populatedAppointment = await Appointment.findById(appointment._id)
+//       .populate("doctor")
+//       .populate("documents");
+
+//     res.status(201).json({
+//       status: "success",
+//       data: populatedAppointment,
+//     });
+//   } catch (error) {
+//     console.error("❌ Error creating appointment:", error);
+//     res.status(500).json({
+//       status: "error",
+//       message: "Server error while creating appointment",
+//       error: error.message,
+//     });
+//   }
+// };
 
 export const updateAppointment = async (req, res) => {
   try {

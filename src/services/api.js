@@ -53,6 +53,7 @@ export const doctorsAPI = {
   getOne: (id) => api.get(`/doctors/${id}`),
   create: (data) => api.post("/doctors", data),
   update: (id, data) => api.put(`/doctors/${id}`, data),
+  delete: (id) => api.delete(`/doctors/${id}`),
 };
 
 // Documents
@@ -100,7 +101,6 @@ export const appointmentsAPI = {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-      "Content-Type": "multipart/form-data",
       onUploadProgress: (progressEvent) => {
         if (onProgress) {
           const percentCompleted = Math.round(

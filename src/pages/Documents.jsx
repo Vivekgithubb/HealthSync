@@ -156,7 +156,7 @@ export default function Documents() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-end items-center">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-bold text-blue-900">Documents</h1>
           <p className="text-gray-500 mt-2">

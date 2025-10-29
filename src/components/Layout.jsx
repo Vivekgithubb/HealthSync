@@ -114,18 +114,20 @@ export default function Layout({ children }) {
                   </Link>
                 );
               })}
-              <div className="border-t border-blue-700 pt-3 mt-2">
-                <p className="text-xs text-gray-400">
-                  Logged in as {user?.name}
-                </p>
+              <div className="border-t border-blue-700 pt-3 mt-2 flex flex-row justify-between items-center">
+                <div className="flex flex-col justify-center items-center">
+                  <p className="text-xs text-gray-400">Logged in as</p>
+                  <p>{user?.name}</p>
+                </div>
+
                 <button
                   onClick={() => {
                     setMenuOpen(false);
                     logout();
                   }}
-                  className="flex items-center space-x-2 text-red-400 mt-2"
+                  className="flex items-center justify-center w-full px-1 py-2 mt-3 space-x-2 text-sm font-medium text-red-400 hover:text-white hover:bg-red-600 rounded-md transition-all duration-200"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-7  h-7" />
                   <span>Logout</span>
                 </button>
               </div>
