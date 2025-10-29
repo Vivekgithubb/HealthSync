@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-// const Appointment = require("../models/Appointment");
 const { protect } = require("../middleware/auth");
+const upload = require("../middleware/upload");
 const {
   appointments,
   upcoming,
@@ -27,9 +27,9 @@ router.get("/upcoming", protect, upcoming);
 router.get("/:id", protect, findAppointment);
 
 // @route   POST /api/appointments
-// @desc    Create new appointment
+// @desc    Create new appointment with optional file uploads
 // @access  Private
-router.post("/", protect, newAppointment);
+router.post("/", protect, upload.array("files", 5), newAppointment);
 
 // @route   PUT /api/appointments/:id
 // @desc    Update appointment

@@ -95,7 +95,24 @@ export const appointmentsAPI = {
   getAll: () => api.get("/appointments"),
   getUpcoming: () => api.get("/appointments/upcoming"),
   getOne: (id) => api.get(`/appointments/${id}`),
-  create: (data) => api.post("/appointments", data),
+  create: (data, onProgress) => {
+    const config = {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      "Content-Type": "multipart/form-data",
+      onUploadProgress: (progressEvent) => {
+        if (onProgress) {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          onProgress(percentCompleted);
+        }
+      },
+    };
+
+    return api.post("/appointments", data, config);
+  },
   update: (id, data) => api.put(`/appointments/${id}`, data),
   delete: (id) => api.delete(`/appointments/${id}`),
 };

@@ -35,6 +35,11 @@ export default function Appointments() {
     documents: [],
   });
 
+  const [uploadMode, setUploadMode] = useState("existing");
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState({});
+  const [fileErrors, setFileErrors] = useState({});
+
   const selectedDoctor = useMemo(
     () => doctors.find((d) => d._id === form.doctor),
     [doctors, form.doctor]
@@ -71,6 +76,10 @@ export default function Appointments() {
     });
     setShowForm(false);
     setError("");
+    setSelectedFiles([]);
+    setUploadProgress({});
+    setFileErrors({});
+    setUploadMode("existing");
   };
 
   const handleChange = (e) => {
@@ -106,23 +115,82 @@ export default function Appointments() {
     }));
   };
 
+  const handleFileSelect = (files) => {
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "image/jpeg",
+      "image/png",
+    ];
+
+    const newErrors = {};
+    const validFiles = files.filter((file) => {
+      if (file.size > maxSize) {
+        newErrors[
+          file.name
+        ] = `${file.name} is too large. Maximum size is 10MB`;
+        return false;
+      }
+      if (!allowedTypes.includes(file.type)) {
+        newErrors[file.name] = `${file.name} has an invalid file type`;
+        return false;
+      }
+      return true;
+    });
+
+    setFileErrors(newErrors);
+    setSelectedFiles((prev) => [...prev, ...validFiles]);
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError("");
     setSuccess("");
     try {
-      await appointmentsAPI.create({
-        ...form,
-        doctor: form.manualDoctor
-          ? { name: form.manualDoctorName }
-          : form.doctor,
-        documents: form.documents,
+      const formData = new FormData();
+
+      // Append appointment data
+      formData.append("appointmentDate", form.appointmentDate);
+      formData.append("appointmentTime", form.appointmentTime);
+      formData.append("reason", form.reason);
+      formData.append("notes", form.notes);
+
+      // Handle doctor data
+      if (form.manualDoctor) {
+        formData.append(
+          "doctor",
+          JSON.stringify({ name: form.manualDoctorName })
+        );
+      } else {
+        formData.append("doctor", form.doctor);
+      }
+
+      // Append existing document IDs
+      form.documents.forEach((docId) => {
+        formData.append("documents[]", docId);
       });
+
+      // Append new files
+      selectedFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      // Use the appointmentsAPI service instead of direct axios call
+      await appointmentsAPI.create(formData);
+
       setSuccess("Appointment scheduled! You will receive an email reminder.");
       const apts = await appointmentsAPI.getAll();
       setAppointments(apts.data);
       resetForm();
+      setSelectedFiles([]);
+      setUploadProgress({});
       setTimeout(() => setSuccess(""), 3000);
     } catch (e) {
       setError(e.response?.data?.message || "Failed to schedule appointment");
@@ -524,29 +592,133 @@ export default function Appointments() {
                   <label className="block text-sm font-medium text-blue-900 mb-2">
                     Attach Documents (Reports to bring)
                   </label>
-                  <div className="border border-gray-200 rounded-md p-2 max-h-40 overflow-y-auto">
-                    {docs.length === 0 ? (
-                      <p className="text-sm text-gray-500 p-2">
-                        No documents uploaded yet
-                      </p>
-                    ) : (
-                      docs.map((d) => (
+                  <div className="flex space-x-4 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setUploadMode("existing")}
+                      className={`px-4 py-2 text-sm font-medium rounded-md ${
+                        uploadMode === "existing"
+                          ? "bg-amber-500 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      Select Existing
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUploadMode("new")}
+                      className={`px-4 py-2 text-sm font-medium rounded-md ${
+                        uploadMode === "new"
+                          ? "bg-amber-500 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      Upload New
+                    </button>
+                  </div>
+
+                  {uploadMode === "existing" ? (
+                    <div className="border border-gray-200 rounded-md p-2 max-h-40 overflow-y-auto">
+                      {docs.length === 0 ? (
+                        <p className="text-sm text-gray-500 p-2">
+                          No documents uploaded yet
+                        </p>
+                      ) : (
+                        docs.map((d) => (
+                          <label
+                            key={d._id}
+                            className="flex items-center space-x-2 px-2 py-1 hover:bg-gray-50 rounded"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={form.documents.includes(d._id)}
+                              onChange={() => toggleDoc(d._id)}
+                            />
+                            <span className="text-sm text-gray-700 truncate">
+                              {d.title}
+                            </span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div
+                        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-amber-500 transition-colors"
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const files = Array.from(e.dataTransfer.files);
+                          handleFileSelect(files);
+                        }}
+                      >
+                        <input
+                          type="file"
+                          multiple
+                          onChange={(e) =>
+                            handleFileSelect(Array.from(e.target.files))
+                          }
+                          className="hidden"
+                          id="file-upload"
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        />
                         <label
-                          key={d._id}
-                          className="flex items-center space-x-2 px-2 py-1 hover:bg-gray-50 rounded"
+                          htmlFor="file-upload"
+                          className="cursor-pointer flex flex-col items-center"
                         >
-                          <input
-                            type="checkbox"
-                            checked={form.documents.includes(d._id)}
-                            onChange={() => toggleDoc(d._id)}
-                          />
-                          <span className="text-sm text-gray-700 truncate">
-                            {d.title}
+                          <Paperclip className="w-8 h-8 text-gray-400 mb-2" />
+                          <span className="text-sm font-medium text-gray-700">
+                            Drop files here or click to upload
+                          </span>
+                          <span className="text-xs text-gray-500 mt-1">
+                            PDF, DOC, DOCX, JPG, PNG up to 10MB
                           </span>
                         </label>
-                      ))
-                    )}
-                  </div>
+                      </div>
+
+                      {/* Selected Files Preview */}
+                      {selectedFiles.length > 0 && (
+                        <div className="space-y-2">
+                          {selectedFiles.map((file, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between bg-gray-50 p-2 rounded-md"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <Paperclip className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm text-gray-700 truncate">
+                                  {file.name}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeFile(index)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* File Errors */}
+                      {Object.keys(fileErrors).length > 0 && (
+                        <div className="text-red-500 text-sm">
+                          {Object.values(fileErrors).map((error, index) => (
+                            <p key={index}>{error}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-md p-3 flex items-start space-x-2">
