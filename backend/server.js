@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/database");
+const helmet = require("helmet");
 const cron = require("node-cron");
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
@@ -10,6 +11,8 @@ const appointmentRoute = require("./routes/appointments");
 const documentRoutes = require("./routes/documents");
 const pharmacyRoutes = require("./routes/pharmacy");
 const visitRoutes = require("./routes/visits");
+const xss = require("xss");
+const rateLimit = require("express-rate-limit");
 const { sendAppointmentReminders } = require("./utils/reminderService");
 
 // Connect to database
@@ -19,18 +22,72 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: [
-      process.env.FRONTEND_URL,
-      "http://localhost:5173",
-      "http://192.168.1.128:5173",
-    ],
+    // origin: [
+    //   process.env.FRONTEND_URL,
+    //   "http://localhost:5173",
+    //   "http://192.168.1.128:5173",
+    // ],
+    origin: true,
     credentials: true,
   })
 );
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+  })
+);
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000, //100 requests from same ip in a hour
+  message: "too many requests from this IP , please try again in an hour",
+});
+app.use("/api", limiter); //onlyfor all routes starting with api
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+//requrests limit from same api
+
+//Data sanitizaion against noSQL query injection
+
+// 🛡️ Custom NoSQL Injection Sanitizer
+// 🧹 NoSQL injection sanitizer
+
+// 🛡️ NoSQL Injection & XSS Protection Middleware
+app.use((req, res, next) => {
+  const sanitize = (obj) => {
+    if (!obj || typeof obj !== "object") return;
+
+    for (const key in obj) {
+      if (!Object.prototype.hasOwnProperty.call(obj, key)) continue;
+
+      const val = obj[key];
+
+      // 🚫 Prevent MongoDB operators like $gt, $or, etc.
+      if (key.startsWith("$") || key.includes(".")) {
+        delete obj[key];
+        continue;
+      }
+
+      // 🧼 Sanitize strings for XSS
+      if (typeof val === "string") {
+        obj[key] = xss(val, {
+          whiteList: {}, // remove all HTML tags
+          stripIgnoreTag: true,
+          stripIgnoreTagBody: ["script"],
+        });
+      }
+
+      // Recursively sanitize nested objects
+      if (typeof val === "object" && val !== null) sanitize(val);
+    }
+  };
+
+  sanitize(req.body);
+  sanitize(req.query);
+  sanitize(req.params);
+  next();
+});
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/doctors", doctorRoutes);
