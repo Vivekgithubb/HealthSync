@@ -6,7 +6,7 @@ import './styles/customStyles.css';
 
 // --- 1. CONFIGURATION AND CORE UTILITIES ---
 
-const API_KEY = "AIzaSyAODcrt9KvGcbmGVtU84iub5ApXAI8hz8I"; // Automatically provided by the environment
+const API_KEY = "/"; // Automatically provided by the environment
 const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
 const MAX_RETRIES = 5;
 const MAX_FILE_SIZE_MB = 15;
