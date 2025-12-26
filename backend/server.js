@@ -31,7 +31,7 @@ app.use(
       "http://localhost:5173",
       "http://192.168.1.128:5173",
       "https://healthsync-frontend.onrender.com",
-      "https: //healthsyncc.vercel.app",
+      "https://healthsyncc.vercel.app",
       "https://healthsync-1-87la.onrender.com",
     ],
     credentials: true,
