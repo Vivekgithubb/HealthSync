@@ -1,6 +1,6 @@
 # HealthSync - Personal Health Management System
 
-A comprehensive full-stack web application for managing personal health records, doctor appointments, medical visits, documents, and AI-powered pharmacy assistance.
+A comprehensive AI-full-stack web application for managing personal health records, doctor appointments, medical visits, documents, and AI-powered pharmacy assistance.
 
 ## 📋 Table of Contents
 - [Features](#features)
